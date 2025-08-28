@@ -5,7 +5,7 @@ import { prisma } from '../models/prisma'
 export async function getUsers(_req: Request, res: Response) {
   try {
     const users = await prisma.user.findMany({
-      orderBy: { id: 'asc' },
+      orderBy: { Id: 'asc' },
     })
     return res.json(users)
   } catch (err: unknown) {
@@ -23,7 +23,7 @@ export async function getUserbyId(req: Request, res: Response) {
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { id: idNum } })
+    const user = await prisma.user.findUnique({ where: { Id: idNum } })
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado' })
     }
@@ -87,7 +87,7 @@ export async function updateUser(req: Request, res: Response) {
 
   try {
     const updated = await prisma.user.update({
-      where: { id: idNum },
+      where: { Id: idNum },
       data,
     })
     return res.status(200).json(updated)
@@ -114,12 +114,12 @@ export async function deleteUser(req: Request, res: Response) {
   }
 
   try {
-    const exists = await prisma.user.findUnique({ where: { id: idNum } })
+    const exists = await prisma.user.findUnique({ where: { Id: idNum } })
     if (!exists) {
       return res.status(404).json({ message: 'Usuário não encontrado' })
     }
 
-    const deleted = await prisma.user.delete({ where: { id: idNum } })
+    const deleted = await prisma.user.delete({ where: { Id: idNum } })
     return res.status(200).json({ message: 'Usuário deletado com sucesso', data: deleted })
   } catch (err: unknown) {
     if (err instanceof PrismaClientKnownRequestError) {
