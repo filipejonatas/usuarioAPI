@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json())
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs))
-app.use('/', router)
+app.use('/api', router)
 const PORT = process.env.PORT || 3000;
 
 
