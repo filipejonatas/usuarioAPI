@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { getUsers, getUserbyId, createUser, updateUser, deleteUser } from "../controller/UserController"
+import { register, login, getProfile } from "../controller/authController"
+import { authenticateToken } from "../middleware/auth"
 
 export const router = Router();
+
+// ========== ROTAS DE USUÁRIOS (PROTEGIDAS) ==========
 
 /**
  * @swagger
@@ -9,6 +13,8 @@ export const router = Router();
  *   get:
  *     summary: Lista todos os usuários
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de usuários retornada com sucesso
@@ -18,10 +24,14 @@ export const router = Router();
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Token não fornecido
+ *       403:
+ *         description: Token inválido
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/users', getUsers);
+router.get('/users', authenticateToken, getUsers);
 
 /**
  * @swagger
@@ -29,6 +39,8 @@ router.get('/users', getUsers);
  *   get:
  *     summary: Busca um usuário por ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -43,12 +55,16 @@ router.get('/users', getUsers);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Token não fornecido
+ *       403:
+ *         description: Token inválido
  *       404:
  *         description: Usuário não encontrado
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/users/:id', getUserbyId);
+router.get('/users/:id', authenticateToken, getUserbyId);
 
 /**
  * @swagger
@@ -56,6 +72,8 @@ router.get('/users/:id', getUserbyId);
  *   post:
  *     summary: Cria um novo usuário
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -71,10 +89,14 @@ router.get('/users/:id', getUserbyId);
  *               $ref: '#/components/schemas/User'
  *       400:
  *         description: Dados inválidos ou email já existe
+ *       401:
+ *         description: Token não fornecido
+ *       403:
+ *         description: Token inválido
  *       500:
  *         description: Erro interno do servidor
  */
-router.post('/users', createUser);
+router.post('/users', authenticateToken, createUser);
 
 /**
  * @swagger
@@ -82,6 +104,8 @@ router.post('/users', createUser);
  *   put:
  *     summary: Atualiza um usuário existente
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -106,10 +130,14 @@ router.post('/users', createUser);
  *         description: Usuário não encontrado
  *       400:
  *         description: Dados inválidos
+ *       401:
+ *         description: Token não fornecido
+ *       403:
+ *         description: Token inválido
  *       500:
  *         description: Erro interno do servidor
  */
-router.put('/users/:id', updateUser);
+router.put('/users/:id', authenticateToken, updateUser);
 
 /**
  * @swagger
@@ -117,6 +145,8 @@ router.put('/users/:id', updateUser);
  *   delete:
  *     summary: Remove um usuário
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -137,7 +167,11 @@ router.put('/users/:id', updateUser);
  *                   example: "Usuário removido com sucesso"
  *       404:
  *         description: Usuário não encontrado
+ *       401:
+ *         description: Token não fornecido
+ *       403:
+ *         description: Token inválido
  *       500:
  *         description: Erro interno do servidor
  */
-router.delete('/users/:id', deleteUser);
+router.delete('/users/:id', authenticateToken, deleteUser);
