@@ -5,14 +5,9 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { UserPayload, RegisterRequest, LoginRequest } from '../types/authInterface';
 
-// Extend Express Request interface to include user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: UserPayload;
-    }
-  }
-}
+// Remove duplicate Express Request interface extension here.
+// The extension should only be declared once, e.g., in your middleware/auth.ts or a dedicated types file.
+
 
 // Função para gerar hash da senha
 async function hashPassword(password: string): Promise<string> {
@@ -40,7 +35,7 @@ function generateToken(user: UserPayload): string {
     Id: user.Id,
     email: user.email,
     ...(user.name != null ? { name: user.name } : {}),
-    ...(user.role != null ? { role: user.role } : {}),
+    ...(user.roleuser != null ? { role: user.roleuser } : {}),
   };
 
   return jwt.sign(payload, JWT_SECRET, {
@@ -88,7 +83,7 @@ export async function register(req: Request, res: Response) {
       Id: user.Id,
       email: user.email,
       name: user.name ?? null,
-      role: user.role ?? null,
+      roleuser: user.role ?? null,
     });
 
     // Retornar usuário sem senha
@@ -138,7 +133,7 @@ export async function login(req: Request, res: Response) {
       Id: user.Id,
       email: user.email,
       name: user.name ?? null,
-      role: user.role ?? null,
+      roleuser: user.role ?? null,
     });
 
     // Retornar usuário sem senha

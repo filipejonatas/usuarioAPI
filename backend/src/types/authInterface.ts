@@ -1,15 +1,16 @@
+import type { role } from "@prisma/client"
 export interface UserPayload {
   Id: number
   email: string
   name?: string | null
-  role?: string | null
+  roleuser?: role | null | string;
 }
 
 export interface RegisterRequest {
   email: string
   password: string
   name?: string
-  role?: string
+  role?: role
 }
 
 export interface LoginRequest {

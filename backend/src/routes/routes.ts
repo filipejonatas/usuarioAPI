@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { getUsers, getUserbyId, createUser, updateUser, deleteUser } from "../controller/UserController"
 import { authenticateToken } from "../middleware/auth"
+import { requireRole } from "../middleware/roleautorization";
+import { role } from "@prisma/client";
 
 export const router = Router();
 
@@ -95,7 +97,7 @@ router.get('/users/:id', authenticateToken, getUserbyId);
  *       500:
  *         description: Erro interno do servidor
  */
-router.post('/users', authenticateToken, createUser);
+router.post('/users', authenticateToken, requireRole(role.Admin), createUser);
 
 /**
  * @swagger
@@ -136,7 +138,7 @@ router.post('/users', authenticateToken, createUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.put('/users/:id', authenticateToken, updateUser);
+router.put('/users/:id', authenticateToken, requireRole(role.Admin), updateUser);
 
 /**
  * @swagger
@@ -173,4 +175,4 @@ router.put('/users/:id', authenticateToken, updateUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.delete('/users/:id', authenticateToken, deleteUser);
+router.delete('/users/:id', authenticateToken, requireRole(role.Admin), deleteUser);
