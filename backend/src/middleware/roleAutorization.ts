@@ -27,7 +27,9 @@ export function requireAnyRole(req: Request, res: Response, next: NextFunction) 
 export function requireRoleOrSelf(allowed: role[], getOwnerId: (req: Request) => number) {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    if (!user) return res.status(401).json({ message: 'Não autenticado' });
+    if (!user) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
 
     if (allowed.includes(user.role as role)) {
       return next();

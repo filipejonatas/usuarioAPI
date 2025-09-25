@@ -1,13 +1,93 @@
 import { Router } from "express";
 import { getUsers, getUserbyId, createUser, updateUser, deleteUser } from "../controller/UserController"
+import { login, register } from "../controller/authController"
 import { authenticateToken } from "../middleware/auth"
-import { requireRole } from "../middleware/roleautorization";
+import { requireRole } from "../middleware/roleAutorization";
 import { role } from "@prisma/client";
 
 export const router = Router();
 
-// ========== ROTAS DE USUÁRIOS (PROTEGIDAS) ==========
+// ========== ROTAS DE AUTENTICAÇÃO (PÚBLICAS) ==========
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Realiza login do usuário
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login realizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 token:
+ *                   type: string
+ *       400:
+ *         description: Dados inválidos
+ *       401:
+ *         description: Credenciais inválidas
+ */
+router.post('/auth/login', login);
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Registra um novo usuário
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [Admin, User]
+ *     responses:
+ *       201:
+ *         description: Usuário registrado com sucesso
+ *       400:
+ *         description: Dados inválidos
+ *       409:
+ *         description: E-mail já cadastrado
+ */
+router.post('/auth/register', register);
+
+// ========== ROTAS DE USUÁRIOS (PROTEGIDAS) ==========
 /**
  * @swagger
  * /api/users:
@@ -138,7 +218,7 @@ router.post('/users', authenticateToken, requireRole(role.Admin), createUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.put('/users/:id', authenticateToken, requireRole(role.Admin), updateUser);
+router.put('/users/:id', authenticateToken, requireRole(role.Admin || role.Manager), updateUser);
 
 /**
  * @swagger
