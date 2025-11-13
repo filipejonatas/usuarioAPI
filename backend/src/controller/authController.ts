@@ -104,6 +104,57 @@ export async function register(req: Request, res: Response) {
   }
 }
 
+// Endpoint para alterar senha
+export async function changePassword(req: Request, res: Response) {
+  const { currentPassword, newPassword } = req.body as {
+    currentPassword: string
+    newPassword: string
+  }
+
+  // Validações
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'Senha atual e nova senha são obrigatórias' })
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: 'Nova senha deve ter pelo menos 6 caracteres' })
+  }
+
+  try {
+    const { user } = req
+    if (!user) {
+      return res.status(401).json({ message: 'Usuário não autenticado' })
+    }
+
+    // Buscar usuário completo do banco
+    const dbUser = await prisma.user.findUnique({ where: { Id: user.Id } })
+    if (!dbUser || !dbUser.password) {
+      return res.status(404).json({ message: 'Usuário não encontrado' })
+    }
+
+    // Verificar senha atual
+    const isValidPassword = await verifyPassword(currentPassword, dbUser.password)
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Senha atual incorreta' })
+    }
+
+    // Hash da nova senha
+    const hashedPassword = await hashPassword(newPassword)
+
+    // Atualizar senha
+    await prisma.user.update({
+      where: { Id: user.Id },
+      data: { password: hashedPassword },
+    })
+
+    return res.status(200).json({ message: 'Senha alterada com sucesso' })
+  } catch (err: unknown) {
+    console.error('changePassword error:', err)
+    const message = err instanceof Error ? err.message : 'Erro ao alterar senha'
+    return res.status(500).json({ message })
+  }
+}
+
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body as LoginRequest;
 
@@ -136,6 +187,10 @@ export async function login(req: Request, res: Response) {
       roleuser: user.role ?? null,
     });
 
+    // Verificar se é a primeira vez que o usuário faz login (senha gerada pelo sistema)
+    // Se createdAt e updatedAt são iguais, provavelmente é a primeira vez
+    const isFirstLogin = user.createdAt.getTime() === user.updatedAt.getTime();
+    
     // Retornar usuário sem senha
     const { password: _, ...userWithoutPassword } = user;
 
@@ -143,6 +198,7 @@ export async function login(req: Request, res: Response) {
       message: 'Login realizado com sucesso',
       user: userWithoutPassword,
       token,
+      mustChangePassword: isFirstLogin, // Flag para indicar que precisa trocar senha
     });
   } catch (err: unknown) {
     console.error('login error:', err);

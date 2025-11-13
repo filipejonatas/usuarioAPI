@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getUsers, getUserbyId, createUser, updateUser, deleteUser } from "../controller/UserController"
-import { login, register } from "../controller/authController"
+import { login, register, changePassword } from "../controller/authController"
 import { authenticateToken } from "../middleware/auth"
 import { requireRole } from "../middleware/roleAutorization";
 import { role } from "@prisma/client";
@@ -86,6 +86,39 @@ router.post('/auth/login', login);
  *         description: E-mail já cadastrado
  */
 router.post('/auth/register', register);
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   post:
+ *     summary: Altera a senha do usuário autenticado
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       200:
+ *         description: Senha alterada com sucesso
+ *       400:
+ *         description: Dados inválidos
+ *       401:
+ *         description: Senha atual incorreta ou não autenticado
+ */
+router.post('/auth/change-password', authenticateToken, changePassword);
 
 // ========== ROTAS DE USUÁRIOS (PROTEGIDAS) ==========
 /**
@@ -218,7 +251,7 @@ router.post('/users', authenticateToken, requireRole(role.Admin), createUser);
  *       500:
  *         description: Erro interno do servidor
  */
-router.put('/users/:id', authenticateToken, requireRole(role.Admin || role.Manager), updateUser);
+router.put('/users/:id', authenticateToken, requireRole(role.Admin, role.Manager), updateUser);
 
 /**
  * @swagger

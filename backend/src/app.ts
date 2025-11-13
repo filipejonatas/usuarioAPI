@@ -15,7 +15,17 @@ app.use(cors({
 }));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs))
 app.use('/api', router)
+
+// Health check endpoint for testing
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok' })
+})
+
 const PORT = process.env.PORT || 3000;
 
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.listen((PORT), () => { console.log(`server rodando na porta ${PORT}`) })
+}
 
-app.listen((PORT), () => { console.log(`server rodando na porta ${PORT}`) })
+export default app

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../contexts/AuthContext'
-import { LoginRequest } from '../service/api'
+import { LoginRequest, authApi } from '../service/api'
 import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
@@ -22,8 +22,16 @@ export default function LoginPage() {
     setError('')
     
     try {
-      await login(data)
-      router.push('/home') // Redirect to HomePage after successful login
+      const response = await authApi.login(data)
+      await login(data) // This updates the context
+      
+      // Check if user needs to change password
+      if (response.mustChangePassword) {
+        router.push('/change-password')
+      } else {
+        // All users redirect to Home Page after login
+        router.push('/home')
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || 'Erro ao fazer login')
     } finally {

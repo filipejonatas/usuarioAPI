@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:http": "jest --testPathPattern=http",
     "dev": "ts-node src/app.ts"
   },
   "keywords": [],
@@ -26,9 +29,15 @@
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
+    "@types/jest": "^29.5.12",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/supertest": "^6.0.2",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
-    "prisma": "^6.15.0"
+    "jest": "^29.7.0",
+    "prisma": "^6.15.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.1.2",
+    "zod": "^3.23.8"
   }
 }

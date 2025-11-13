@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { prisma } from '../models/prisma'
+import bcrypt from 'bcrypt'
 
 export async function getUsers(_req: Request, res: Response) {
   try {
@@ -35,6 +36,36 @@ export async function getUserbyId(req: Request, res: Response) {
   }
 }
 
+// Função para gerar senha aleatória
+function generateRandomPassword(length: number = 12): string {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+  const numbers = '0123456789'
+  const special = '!@#$%&*'
+  const allChars = uppercase + lowercase + numbers + special
+  
+  let password = ''
+  // Garantir pelo menos um de cada tipo
+  password += uppercase[Math.floor(Math.random() * uppercase.length)]
+  password += lowercase[Math.floor(Math.random() * lowercase.length)]
+  password += numbers[Math.floor(Math.random() * numbers.length)]
+  password += special[Math.floor(Math.random() * special.length)]
+  
+  // Preencher o resto aleatoriamente
+  for (let i = password.length; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)]
+  }
+  
+  // Embaralhar a senha
+  return password.split('').sort(() => Math.random() - 0.5).join('')
+}
+
+// Função para gerar hash da senha
+async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 12
+  return await bcrypt.hash(password, saltRounds)
+}
+
 export async function createUser(req: Request, res: Response) {
   const { email, name, role } = req.body as {
     email: string
@@ -47,10 +78,36 @@ export async function createUser(req: Request, res: Response) {
   }
 
   try {
+    // Normalizar e-mail
+    const normEmail = email.trim().toLowerCase()
+
+    // Verificar se usuário já existe
+    const existingUser = await prisma.user.findUnique({ where: { email: normEmail } })
+    if (existingUser) {
+      return res.status(409).json({ message: 'E-mail já está em uso' })
+    }
+
+    // Gerar senha aleatória
+    const generatedPassword = generateRandomPassword(12)
+    const hashedPassword = await hashPassword(generatedPassword)
+
+    // Criar usuário
     const created = await prisma.user.create({
-      data: { email, name, role },
+      data: {
+        email: normEmail,
+        name: name ?? null,
+        role: role ?? null,
+        password: hashedPassword,
+      },
     })
-    return res.status(201).json(created)
+
+    // Retornar usuário sem senha hash, mas com a senha gerada
+    const { password: _, ...userWithoutPassword } = created
+
+    return res.status(201).json({
+      ...userWithoutPassword,
+      generatedPassword, // Incluir senha gerada na resposta
+    })
   } catch (err: unknown) {
     if (err instanceof PrismaClientKnownRequestError) {
       if (err.code === 'P2002') {

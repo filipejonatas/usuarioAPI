@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { userApi, User } from '../service/api'
-import { Users, Plus, Edit, Trash2, Save, X } from 'lucide-react'
+import { Users, Plus, Edit, Trash2, Save, X, Home, LogOut, Copy, Check } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 import ProtectedRoute from '../components/ProtectedRoute'
 
 export default function CadastroPage() {
@@ -11,8 +13,26 @@ export default function CadastroPage() {
   const [loading, setLoading] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null)
+  const [newUserEmail, setNewUserEmail] = useState<string>('')
+  const [copied, setCopied] = useState(false)
+
+  const copyToClipboard = async () => {
+    if (generatedPassword) {
+      await navigator.clipboard.writeText(generatedPassword)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+  const router = useRouter()
+  const { logout, user } = useAuth()
 
   const { register, handleSubmit, reset, setValue } = useForm<Omit<User, 'Id'>>()
+
+  const handleLogout = () => {
+    logout()
+    router.push('/login')
+  }
 
   // Carregar usuários
   const loadUsers = async () => {
@@ -32,16 +52,24 @@ export default function CadastroPage() {
       if (editingUser) {
         await userApi.update(editingUser.Id, data)
         alert('Usuário atualizado!')
+        reset()
+        setEditingUser(null)
+        setShowForm(false)
       } else {
-        await userApi.create(data)
-        alert('Usuário criado!')
+        const response = await userApi.create(data)
+        if (response.generatedPassword) {
+          setGeneratedPassword(response.generatedPassword)
+          setNewUserEmail(response.email)
+        } else {
+          alert('Usuário criado!')
+        }
+        reset()
+        setShowForm(false)
+        loadUsers()
       }
-      reset()
-      setEditingUser(null)
-      setShowForm(false)
-      loadUsers()
-    } catch (error) {
-      alert('Erro ao salvar usuário')
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Erro ao salvar usuário'
+      alert(errorMessage)
     }
   }
 
@@ -80,9 +108,45 @@ export default function CadastroPage() {
 
   return (
     <ProtectedRoute requireAdmin={true}>
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50">
+        {/* Navigation Header */}
+        <header className="bg-white shadow mb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => router.push('/home')}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <Home className="h-4 w-4 mr-2" />
+                  Início
+                </button>
+                <button
+                  onClick={() => router.push('/admin/users')}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Usuários
+                </button>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-700">
+                  {user?.name || user?.email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+          {/* Page Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -217,6 +281,61 @@ export default function CadastroPage() {
             </div>
           </div>
         </div>
+
+        {/* Modal para exibir senha gerada */}
+        {generatedPassword && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Usuário Criado com Sucesso!
+                </h3>
+              </div>
+              <div className="px-6 py-4">
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    <strong>E-mail:</strong> {newUserEmail}
+                  </p>
+                  <p className="text-sm text-gray-600 mb-4">
+                    <strong>Senha Gerada:</strong>
+                  </p>
+                  <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-md border border-gray-300">
+                    <code className="flex-1 text-sm font-mono text-gray-800 break-all">
+                      {generatedPassword}
+                    </code>
+                    <button
+                      onClick={copyToClipboard}
+                      className="flex-shrink-0 p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title="Copiar senha"
+                    >
+                      {copied ? (
+                        <Check className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <Copy className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    <strong>⚠️ IMPORTANTE:</strong> Esta senha deve ser redefinida no primeiro login do usuário!
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button
+                  onClick={() => {
+                    setGeneratedPassword(null)
+                    setNewUserEmail('')
+                  }}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   )
