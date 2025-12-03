@@ -1,0 +1,24 @@
+/**
+ * Adapter Pattern - Bcrypt Password Hasher
+ * Implements PasswordHasher interface using bcrypt library
+ * Adapts bcrypt operations to domain interface
+ */
+import bcrypt from 'bcrypt'
+import type { PasswordHasher } from '../domain/interfaces/PasswordHasher'
+
+export class BcryptPasswordHasher implements PasswordHasher {
+  private readonly saltRounds: number
+
+  constructor(saltRounds: number = 12) {
+    this.saltRounds = saltRounds
+  }
+
+  async hash(password: string): Promise<string> {
+    return await bcrypt.hash(password, this.saltRounds)
+  }
+
+  async compare(password: string, hashedPassword: string): Promise<boolean> {
+    return await bcrypt.compare(password, hashedPassword)
+  }
+}
+
