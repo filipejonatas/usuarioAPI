@@ -2,7 +2,7 @@ import { Router } from "express";
 import { getUsers, getUserbyId, createUser, updateUser, deleteUser } from "../controller/UserController"
 import { login, register, changePassword } from "../controller/authController"
 import { authenticateToken } from "../middleware/auth"
-import { requireRole } from "../middleware/roleAutorization";
+import { requireRole, requireAnyRole } from "../middleware/roleAutorization";
 import { role } from "@prisma/client";
 
 export const router = Router();
@@ -76,7 +76,7 @@ router.post('/auth/login', login);
  *                 type: string
  *               role:
  *                 type: string
- *                 enum: [Admin, User]
+ *                 enum: [Admin, User, Manager]
  *     responses:
  *       201:
  *         description: Usuário registrado com sucesso
@@ -125,7 +125,7 @@ router.post('/auth/change-password', authenticateToken, changePassword);
  * @swagger
  * /api/users:
  *   get:
- *     summary: Lista todos os usuários
+ *     summary: Lista usuários (Admin/Manager veem todos, User vê apenas os que criou)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -145,7 +145,7 @@ router.post('/auth/change-password', authenticateToken, changePassword);
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/users', authenticateToken, getUsers);
+router.get('/users', authenticateToken, requireAnyRole, getUsers);
 
 /**
  * @swagger
@@ -172,13 +172,13 @@ router.get('/users', authenticateToken, getUsers);
  *       401:
  *         description: Token não fornecido
  *       403:
- *         description: Token inválido
+ *         description: Token inválido ou permissão insuficiente (requer Admin ou Manager)
  *       404:
  *         description: Usuário não encontrado
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/users/:id', authenticateToken, getUserbyId);
+router.get('/users/:id', authenticateToken, requireRole(role.Admin, role.Manager), getUserbyId);
 
 /**
  * @swagger
@@ -206,11 +206,15 @@ router.get('/users/:id', authenticateToken, getUserbyId);
  *       401:
  *         description: Token não fornecido
  *       403:
- *         description: Token inválido
+ *         description: Token inválido ou permissão insuficiente (requer Admin ou Manager)
  *       500:
  *         description: Erro interno do servidor
+ * 
+ * ⚠️ TEMPORÁRIO: Rota desprotegida para criar o primeiro admin.
+ * LEMBRE-SE: Reativar a proteção após criar o primeiro admin!
  */
-router.post('/users', authenticateToken, requireRole(role.Admin), createUser);
+router.post('/users', createUser);
+
 
 /**
  * @swagger

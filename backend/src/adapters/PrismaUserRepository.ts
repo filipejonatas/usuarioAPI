@@ -29,6 +29,14 @@ export class PrismaUserRepository implements UserRepository {
     return users.map(this.mapToDomain)
   }
 
+  async findByCreatorId(creatorId: number): Promise<User[]> {
+    const users = await prisma.user.findMany({
+      where: { createdById: creatorId },
+      orderBy: { Id: 'asc' },
+    })
+    return users.map(this.mapToDomain)
+  }
+
   async create(data: CreateUserData): Promise<User> {
     const normalizedEmail = data.email.trim().toLowerCase()
     const user = await prisma.user.create({
@@ -37,6 +45,7 @@ export class PrismaUserRepository implements UserRepository {
         name: data.name ?? null,
         role: data.role ?? null,
         password: data.password,
+        createdById: data.createdById ?? null,
       },
     })
     return this.mapToDomain(user)
@@ -71,6 +80,7 @@ export class PrismaUserRepository implements UserRepository {
       name: prismaUser.name,
       role: prismaUser.role,
       password: prismaUser.password,
+      createdById: prismaUser.createdById ?? null,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,
     }

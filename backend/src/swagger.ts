@@ -48,8 +48,8 @@ const options: swaggerJSDoc.Options = {
             role: {
               type: 'string',
               description: 'Função/papel do usuário no sistema',
-              example: 'admin',
-              enum: ['admin', 'user', 'moderator'] // ajuste conforme suas roles
+              example: 'Admin',
+              enum: ['Admin', 'User', 'Manager']
             }
           }
         },
@@ -71,8 +71,8 @@ const options: swaggerJSDoc.Options = {
             role: {
               type: 'string',
               description: 'Função/papel do usuário no sistema',
-              example: 'user',
-              enum: ['admin', 'user', 'moderator']
+              example: 'User',
+              enum: ['Admin', 'User', 'Manager']
             }
           }
         },
@@ -93,8 +93,8 @@ const options: swaggerJSDoc.Options = {
             role: {
               type: 'string',
               description: 'Função/papel do usuário no sistema',
-              example: 'moderator',
-              enum: ['admin', 'user', 'moderator']
+              example: 'Manager',
+              enum: ['Admin', 'User', 'Manager']
             }
           }
         },

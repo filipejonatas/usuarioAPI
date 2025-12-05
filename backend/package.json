@@ -6,7 +6,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:http": "jest --testPathPattern=http",
     "dev": "ts-node src/app.ts"
   },
   "keywords": [],

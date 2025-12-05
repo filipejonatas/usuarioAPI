@@ -12,7 +12,7 @@ export class CreateUserUseCase {
     private passwordHasher: PasswordHasher
   ) {}
 
-  async execute(data: CreateUserData): Promise<{ user: Omit<User, 'password'>; generatedPassword: string }> {
+  async execute(data: CreateUserData): Promise<{ user: Omit<User, 'password'>; generatedPassword?: string }> {
     // Normalize email
     const normalizedEmail = data.email.trim().toLowerCase()
 
@@ -22,11 +22,21 @@ export class CreateUserUseCase {
       throw new Error('EMAIL_ALREADY_TAKEN')
     }
 
-    // Generate random password
-    const generatedPassword = this.generateRandomPassword(12)
+    // Use provided password or generate random one
+    const providedPassword = data.password && data.password.trim().length > 0
+    let finalPassword: string
+    let generatedPassword: string | undefined
+
+    if (providedPassword) {
+      finalPassword = data.password
+      generatedPassword = undefined // No password was generated
+    } else {
+      generatedPassword = this.generateRandomPassword(12)
+      finalPassword = generatedPassword
+    }
 
     // Hash password
-    const hashedPassword = await this.passwordHasher.hash(generatedPassword)
+    const hashedPassword = await this.passwordHasher.hash(finalPassword)
 
     // Create user
     const user = await this.userRepository.create({
@@ -41,7 +51,7 @@ export class CreateUserUseCase {
 
     return {
       user: userWithoutPassword,
-      generatedPassword,
+      ...(generatedPassword && { generatedPassword }), // Only include if password was generated
     }
   }
 

@@ -11,7 +11,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { logout, user, isAdmin } = useAuth()
+  const { logout, user, canManageUsers } = useAuth()
 
   const handleLogout = () => {
     logout()
@@ -56,7 +56,7 @@ export default function UsersPage() {
                   <Users className="h-4 w-4 mr-2" />
                   Usuários
                 </button>
-                {isAdmin && (
+                {canManageUsers && (
                   <button
                     onClick={() => router.push('/admin/users')}
                     className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

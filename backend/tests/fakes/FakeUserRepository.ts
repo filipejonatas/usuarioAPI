@@ -21,6 +21,10 @@ export class FakeUserRepository implements UserRepository {
     return [...this.users]
   }
 
+  async findByCreatorId(creatorId: number): Promise<User[]> {
+    return this.users.filter((u) => u.createdById === creatorId)
+  }
+
   async create(data: CreateUserData): Promise<User> {
     const user: User = {
       Id: this.nextId++,
@@ -28,6 +32,7 @@ export class FakeUserRepository implements UserRepository {
       name: data.name ?? null,
       role: data.role ?? null,
       password: data.password,
+      createdById: data.createdById ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     }

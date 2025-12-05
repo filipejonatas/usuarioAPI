@@ -25,7 +25,7 @@ export default function CadastroPage() {
     }
   }
   const router = useRouter()
-  const { logout, user } = useAuth()
+  const { logout, user, isAdmin } = useAuth()
 
   const { register, handleSubmit, reset, setValue } = useForm<Omit<User, 'Id'>>()
 
@@ -107,7 +107,7 @@ export default function CadastroPage() {
   }, [])
 
   return (
-    <ProtectedRoute requireAdmin={true}>
+    <ProtectedRoute requireAdminOrManager={true}>
       <div className="min-h-screen bg-gray-50">
         {/* Navigation Header */}
         <header className="bg-white shadow mb-8">
@@ -199,6 +199,7 @@ export default function CadastroPage() {
                         <option value="">Selecione uma função</option>
                         <option value="User">Usuário</option>
                         <option value="Admin">Administrador</option>
+                        <option value="Manager">Gerente</option>
                       </select>
                     </div>
                   </div>
@@ -252,6 +253,8 @@ export default function CadastroPage() {
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                 user.role === 'Admin' 
                                   ? 'bg-blue-100 text-blue-800' 
+                                  : user.role === 'Manager'
+                                  ? 'bg-purple-100 text-purple-800'
                                   : 'bg-gray-100 text-gray-800'
                               }`}>
                                 {user.role || 'Usuário'}
@@ -266,12 +269,14 @@ export default function CadastroPage() {
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => deleteUser(user.Id)}
-                            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => deleteUser(user.Id)}
+                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

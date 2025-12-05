@@ -11,6 +11,8 @@ interface AuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   isAdmin: boolean
+  isManager: boolean
+  canManageUsers: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -62,6 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = !!user && !!token
   const isAdmin = user?.role === 'Admin'
+  const isManager = user?.role === 'Manager'
+  const canManageUsers = isAdmin || isManager
 
   const value: AuthContextType = {
     user,
@@ -71,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated,
     isAdmin,
+    isManager,
+    canManageUsers,
   }
 
   return (
